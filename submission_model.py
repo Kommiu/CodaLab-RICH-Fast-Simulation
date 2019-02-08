@@ -26,10 +26,9 @@ def f(x):
 
 class Model:
     
-    def __init__(self,n_intervals=4):
-        self.n_intervals = n_intervals
-        
+            
     def train(self, X, Y):
+        self.n_intervals = 5
         self.x_cols = X.columns.tolist()
         self.y_cols = Y.columns.tolist()
         
