@@ -14,7 +14,7 @@ def make_mask(x, bounds):
     
     return np.where(a & b)[1]
 
-def f(x):
+def f(x, x_cols):
     d = {}
     for col in x_cols:
         d[col] = x[col].median()
@@ -46,7 +46,7 @@ class Model:
         
         data['mask'] = masks.sum(axis=1)
         
-        train = data.groupby('mask').apply(f)
+        train = data.groupby('mask').apply(lambda x: f(x, x_cols))
 
         
         self.means = LinearRegression()
