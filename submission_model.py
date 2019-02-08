@@ -26,7 +26,7 @@ def f(x):
 
 class Model:
     
-    def __init__(self, n_intervals):
+    def __init__(self, n_intervals = 5):
         self.n_intervals = n_intervals 
 
     def fit(self, X, Y):
