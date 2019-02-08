@@ -46,7 +46,7 @@ class Model:
         
         data['mask'] = masks.sum(axis=1)
         
-        train = data.groupby('mask').apply(lambda x: f(x, x_cols))
+        train = data.groupby('mask').apply(lambda x: f(x, x_cols, y_cols))
 
         
         self.means = LinearRegression()
