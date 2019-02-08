@@ -14,7 +14,7 @@ def make_mask(x, bounds):
     
     return np.where(a & b)[1]
 
-def f(x, x_cols):
+def f(x, x_cols, y_cols):
     d = {}
     for col in x_cols:
         d[col] = x[col].median()
