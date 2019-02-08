@@ -31,8 +31,8 @@ class Model:
 
     def fit(self, X, Y):
         self.n_intervals = 5
-        self.x_cols = X.columns.tolist()
-        self.y_cols = Y.columns.tolist()
+        x_cols = X.columns.tolist()
+        y_cols = Y.columns.tolist()
         
         data = pd.concat([X.copy(), Y.copy()], axis=1)
         masks = pd.DataFrame(index=X.index, columns=X.columns)
@@ -52,9 +52,11 @@ class Model:
         self.means = LinearRegression()
         self.stds = LinearRegression()
         
-        self.means.fit(train[self.x_cols].values, train[[ col + '_mean' for col in self.y_cols]].values)
-        self.stds.fit(train[self.x_cols].values, train[[col + '_std'  for col in self.y_cols]].values)
+    
+        self.means.fit(train[x_cols].values, train[[ col + '_mean' for col in y_cols]].values)
+        self.stds.fit(train[x_cols].values, train[[col + '_std'  for col in y_cols]].values)
         
+        self.y_cols = y_cols
     def predict(self, X):
         prediction = pd.DataFrame()
         means = self.means.predict(X.values)
