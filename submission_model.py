@@ -19,8 +19,8 @@ def f(x):
     for col in x_cols:
         d[col] = x[col].median()
     for col in y_cols:
-        d[f'{col}_mean'] = x[col].mean()
-        d[f'{col}_std'] =  x[col].std()
+        d[col + '_mean'] = x[col].mean()
+        d[col + '_std'] =  x[col].std()
 
     return pd.Series(d,list(d.keys()))
 
