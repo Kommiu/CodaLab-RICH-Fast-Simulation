@@ -51,8 +51,8 @@ class Model:
         self.means = LinearRegression()
         self.stds = LinearRegression()
         
-        self.means.fit(train[self.x_cols].values, train[[f'{col}_mean' for col in self.y_cols]].values)
-        self.stds.fit(train[self.x_cols].values, train[[f'{col}_std' for col in self.y_cols]].values)
+        self.means.fit(train[self.x_cols].values, train[[ col + '_mean' for col in self.y_cols]].values)
+        self.stds.fit(train[self.x_cols].values, train[[col + '_std'  for col in self.y_cols]].values)
         
     def predict(self, X):
         prediction = pd.DataFrame()
