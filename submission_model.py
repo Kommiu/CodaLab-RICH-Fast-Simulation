@@ -26,8 +26,10 @@ def f(x):
 
 class Model:
     
-            
-    def train(self, X, Y):
+    def __init__(self, n_intervals):
+        self.n_intervals = n_intervals 
+
+    def fit(self, X, Y):
         self.n_intervals = 5
         self.x_cols = X.columns.tolist()
         self.y_cols = Y.columns.tolist()
