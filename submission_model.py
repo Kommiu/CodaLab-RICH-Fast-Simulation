@@ -39,21 +39,24 @@ class Model:
                 ] 
         
         labels = self.binarizer.fit_transform(X)
-        labels = pd.DataFrame(labels, columns = self.ohe_cols, dtype=np.int8)
+        labels = pd.DataFrame(labels, columns = self.ohe_cols, dtype=np.int8, index=X.index)
         
         train = pd.concat([labels, Y], axis=1)
         
-        self.means = train.groupby(self.ohe_cols).mean().reset_index().fillna(Y.mean())
-        self.stds = train.groupby(self.ohe_cols).std(ddof=0).reset_index().fillna(Y.std())
+        self.gmean = Y.mean()
+        self.gstd = Y.std()
+
+        self.means = train.groupby(self.ohe_cols, as_index=False).mean()
+        self.stds = train.groupby(self.ohe_cols, as_index=False).std(ddof=0)
         
     
     def predict(self, X):
         
         labels = self.binarizer.transform(X)
-        labels = pd.DataFrame(labels, columns=self.ohe_cols, dtype=np.int8)
+        labels = pd.DataFrame(labels, columns=self.ohe_cols, dtype=np.int8, index=X.index)
         
-        means = pd.merge(labels, self.means, how='left')[self.y_cols]
-        stds = pd.merge(labels, self.stds, how='left')[self.y_cols]
+        means = pd.merge(labels, self.means, how='left')[self.y_cols].fillna(self.gmean)
+        stds = pd.merge(labels, self.stds, how='left')[self.y_cols].fillna(self.gstd)
         
 
         pred = np.random.normal(loc=means, scale=stds)
@@ -62,4 +65,4 @@ class Model:
             step2 = np.random.binomial(1, self.probs2, (len(X),1))
             pred = -999*step1*step2 + (1-step1)*pred
         
-        return pd.DataFrame(pred, columns = self.y_cols)
+        return pd.DataFrame(pred, columns = self.y_cols, index=X.index)
