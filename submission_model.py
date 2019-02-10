@@ -32,7 +32,7 @@ class Model:
         self.global_means = Y.mean()
         
         self.means = train.groupby(self.ohe_cols).mean().reset_index()
-        self.stds = train.groupby(self.ohe_cols).std().reset_index()
+        self.stds = train.groupby(self.ohe_cols).std().reset_index().fillna(Y.std(axis=0))
         
     
     def predict(self, X):
@@ -44,5 +44,4 @@ class Model:
         
         pred = means.values + stds.values*np.random.standard_normal(stds.shape)
         
-        return pd.DataFrame(pred, columns = self.y_cols).fillna(self.global_means)
-
+        return pd.DataFrame(pred, columns = self.y_cols)
