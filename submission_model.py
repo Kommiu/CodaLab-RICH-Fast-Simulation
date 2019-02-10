@@ -1,67 +1,47 @@
 import numpy as np
 import pandas as pd
-from sklearn.linear_model import LinearRegression 
+
+from sklearn.preprocessing import KBinsDiscretizer
 
 
 
-def make_mask(x, bounds):
-    lefts = bounds[:-1]
-    lefts[0] -= 0.1
-    rights = bounds[1:]
-    
-    a = np.repeat(x, len(rights)).reshape((-1,len(rights))) <= rights
-    b = np.repeat(x, len(lefts)).reshape((-1,len(lefts))) > lefts
-    
-    return np.where(a & b)[1]
-
-def f(x, x_cols, y_cols):
-    d = {}
-    for col in x_cols:
-        d[col] = x[col].median()
-    for col in y_cols:
-        d[col + '_mean'] = x[col].mean()
-        d[col + '_std'] =  x[col].std()
-
-    return pd.Series(d,list(d.keys()))
 
 class Model:
-    
-    def __init__(self, n_intervals = 5):
-        self.n_intervals = n_intervals 
+    def __init__(self, n_bins=10):
+        self.n_bins = n_bins
 
     def fit(self, X, Y):
-        self.n_intervals = 5
-        x_cols = X.columns.tolist()
-        y_cols = Y.columns.tolist()
         
-        data = pd.concat([X.copy(), Y.copy()], axis=1)
-        masks = pd.DataFrame(index=X.index, columns=X.columns)
-        
-        quants = [i/self.n_intervals for i in range(self.n_intervals + 1)]
-        bounds =  np.quantile(X, quants, axis=0)
-        
-        for i,col in enumerate(X):
-            masks[col] = make_mask(X[col].values, bounds[:,i]).astype(str)
+        self.x_cols = X.columns.tolist()
+        self.y_cols = Y.columns.tolist()
         
         
-        data['mask'] = masks.sum(axis=1)
-        
-        train = data.groupby('mask').apply(lambda x: f(x, x_cols, y_cols))
-
-        
-        self.means = LinearRegression()
-        self.stds = LinearRegression()
+        self.binarizer = KBinsDiscretizer(n_bins=self.n_bins, encode='onehot-dense')
         
     
-        self.means.fit(train[x_cols].values, train[[ col + '_mean' for col in y_cols]].values)
-        self.stds.fit(train[x_cols].values, train[[col + '_std'  for col in y_cols]].values)
         
-        self.y_cols = y_cols
+        self.ohe_cols = ['{}_{}'.format(a, b+1) 
+                for a,b 
+                in zip(np.repeat(self.x_cols,self.n_bins), np.tile(range(self.n_bins), len(self.x_cols)))
+                ] 
+        
+        train = self.binarizer.fit_transform(X)
+        train = pd.DataFrame(train, columns = self.ohe_cols, dtype=np.int8)
+        
+        train = pd.concat([train, Y], axis=1)
+        
+        self.means = train.groupby(self.ohe_cols).mean().reset_index()
+        self.stds = train.groupby(self.ohe_cols).std().reset_index()
+        
+    
     def predict(self, X):
-        prediction = pd.DataFrame()
-        means = self.means.predict(X.values)
-        stds = self.stds.predict(X.values)
-        pred = np.random.standard_normal()*stds + means
+        
+        test = self.binarizer.transform(X)
+        test = pd.DataFrame(test, columns=self.ohe_cols, dtype=np.int8)
+        means = pd.merge(test, self.means, how='left')[self.y_cols]
+        stds = pd.merge(test, self.stds, how='left')[self.y_cols]
+        
+        pred = means.values + stds.values*np.random.standard_normal(stds.shape)
+        
         return pd.DataFrame(pred, columns = self.y_cols)
-
 
