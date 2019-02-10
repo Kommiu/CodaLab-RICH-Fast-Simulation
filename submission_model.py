@@ -7,7 +7,7 @@ from sklearn.preprocessing import KBinsDiscretizer
 
 
 class Model:
-    def __init__(self, n_bins=10):
+    def __init__(self, n_bins=7):
         self.n_bins = n_bins
 
     def fit(self, X, Y):
@@ -29,6 +29,7 @@ class Model:
         train = pd.DataFrame(train, columns = self.ohe_cols, dtype=np.int8)
         
         train = pd.concat([train, Y], axis=1)
+        self.global_means = Y.mean()
         
         self.means = train.groupby(self.ohe_cols).mean().reset_index()
         self.stds = train.groupby(self.ohe_cols).std().reset_index()
@@ -43,5 +44,5 @@ class Model:
         
         pred = means.values + stds.values*np.random.standard_normal(stds.shape)
         
-        return pd.DataFrame(pred, columns = self.y_cols)
+        return pd.DataFrame(pred, columns = self.y_cols).fillna(self.global_means)
 
